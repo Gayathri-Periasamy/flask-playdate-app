@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -205,3 +206,46 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+=======
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.so
+
+# --- Virtual environment ---
+myvenv/
+.env/
+env/
+*.env
+*.env.*
+
+# --- Flask / Instance folder ---
+instance/
+*.db
+*.sqlite3
+
+# --- OS / Editor files ---
+.DS_Store
+Thumbs.db
+
+# --- VSCode ---
+.vscode/
+*.code-workspace
+
+# --- PyCharm / JetBrains ---
+.idea/
+
+# --- Logs ---
+*.log
+
+# --- Compiled / Distribution ---
+build/
+dist/
+*.egg-info/
+
+# --- Test Files ---
+.pytest_cache/
+tests/
+coverage/
+htmlcov/
+>>>>>>> 70018a9 (Initial Commit - Flask Playdate App - MVP Base)

@@ -1,0 +1,18 @@
+# Core Flask
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-WTF==1.2.1
+Flask-Login==0.6.3
+Flask-Bcrypt==1.0.1
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Database
+SQLAlchemy==2.0.31
+
+# Forms & Validation
+WTForms==3.1.2
+
+# Optional (for development)
+email-validator==2.1.1
