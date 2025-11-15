@@ -1,11 +1,13 @@
 import os
 import secrets
-#from PIL import Image
+from PIL import Image
+from geopy.geocoders import Nominatim
 from flask import Blueprint,current_app, render_template, url_for,flash,redirect,request,abort
-from flaskplaydate.models import User
+from flaskplaydate.models import User, Playdate
 from flaskplaydate import db, bcrypt
-from flaskplaydate.forms import RegistrationForm, LoginForm, UpdateAccountForm
+from flaskplaydate.forms import RegistrationForm, LoginForm, UpdateAccountForm, PlaydateForm
 from flask_login import login_user,current_user, logout_user,login_required
+from datetime import datetime
 
 # Define a Blueprint instead of using app directly
 main = Blueprint('main', __name__)
@@ -13,8 +15,9 @@ main = Blueprint('main', __name__)
 @main.route('/', endpoint='home')
 #@main.route('/home')
 def home():
-    #posts = Post.query.all()
-    return render_template('home.html')
+    page_number = request.args.get('page', 1, type=int)  #default to 1 if no page query parameter, page num restrictd to int, values other than int throw value error
+    playdates = Playdate.query.order_by(Playdate.date_posted.desc()).paginate(page=page_number, per_page=5)
+    return render_template('home.html',playdatesinfo=playdates)
 
 @main.route('/about', endpoint='about')
 def about():
@@ -24,7 +27,7 @@ def about():
 @main.route('/register',endpoint = 'register', methods=['GET','POST'])
 def register():
     if current_user.is_authenticated:
-         return redirect(url_for('home'))
+        return redirect(url_for('home'))
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
@@ -58,12 +61,12 @@ def logout():
     logout_user()
     return redirect(url_for('main.home'))
 
-'''
+
 def save_picture(form_picture):
         random_hex = secrets.token_hex(8)
         _, f_ext = os.path.splitext(form_picture.filename)
         picture_fn = random_hex + f_ext
-        picture_path = os.path.join(app.root_path, 'static/pictures', picture_fn)
+        picture_path = os.path.join(current_app.root_path, 'static/pictures', picture_fn)
 
         output_size = (125, 125)
         target_image = Image.open(form_picture)
@@ -72,14 +75,13 @@ def save_picture(form_picture):
         
         return picture_fn
 
-'''
 
 @main.route('/account', endpoint = 'account', methods=['GET','POST'])
 @login_required
 def account():
     form= UpdateAccountForm()
     if form.validate_on_submit():
-        #current_user.image_file = save_picture(form.picture.data)
+        current_user.image_file = save_picture(form.picture.data)
         current_user.username = form.username.data
         current_user.email = form.email.data
         db.session.commit()
@@ -91,3 +93,101 @@ def account():
         form.email.data = current_user.email
     image_file = url_for('static',filename='pictures/' + current_user.image_file)
     return render_template('account.html', title='Account', image_file=image_file,form=form) 
+
+
+geolocator = Nominatim(user_agent="flask-playdate-app")
+def validate_geocode_location(location_string):
+    result = geolocator.geocode(location_string, country_codes='de', addressdetails=True)
+    if result is None:
+        raise ValueError('Location not found. Please enter a more precise city/area name.')
+    '''if (result.latitude== 0 or result.longitude == 0):
+        raise ValueError('Invalid location coordinates. Please refine your input.')
+    #importance = result.raw.get('importance', 0)
+    #if importance < 0.5:
+    #    raise ValueError('Location is too vague. Please enter a more specific city/area name.')
+    
+    address = result.raw['address']
+    '''
+    allowed_types=['city','town','village','suburb','neighbourhood','hamlet','house','residential']
+    place_type = result.raw.get('type', '')
+    if place_type not in allowed_types:
+        raise ValueError(f'This does not look like a real place, ({place_type}) Try a city or neighborhood.')
+    return result.latitude, result.longitude
+    
+     
+@main.route("/new/playdate",methods=['GET','POST'])
+@login_required
+def create_playdate():
+    form= PlaydateForm()
+    if form.validate_on_submit():
+        try:
+        
+            lat,lon=validate_geocode_location(form.city.data)
+
+            playdate=Playdate(
+                title = form.title.data,
+                description=form.description.data,
+                city=form.city.data, 
+                latitude=lat,
+                longitude=lon,
+                playdate_date_time=datetime.combine(form.date.data, form.time.data),
+                author=current_user
+            )
+            
+            db.session.add(playdate)
+            db.session.commit()
+            flash('Your playdate has been created!','success')
+            return redirect(url_for('main.home'))
+        
+        except ValueError as e:
+            flash(str(e), 'danger')
+        
+    return render_template('create_playdate.html', title='New Playdate', form=form,legend='New Playdate') 
+
+
+@main.route("/playdate/<int:playdate_id>")
+def playdate(playdate_id):
+     playdate=Playdate.query.get_or_404(playdate_id)
+     return render_template('playdate.html', title='playdate.title',playdate=playdate) 
+
+
+@main.route("/playdate/<int:playdate_id>/update",methods=['GET','POST'])
+def update_playdate(playdate_id):
+    playdate=Playdate.query.get_or_404(playdate_id)
+    if playdate.author != current_user:
+        abort(403)
+    form= PlaydateForm()
+    if form.validate_on_submit():
+         playdate.title=form.title.data
+         playdate.description=form.description.data
+         db.session.commit()
+         flash('Your playdate has been updated!','success')
+         return redirect(url_for('main.playdate',playdate_id=playdate.id))
+    elif request.method == 'GET':
+         
+         form.title.data = playdate.title
+         form.description.data = playdate.description
+         form.city.data = playdate.city
+         form.date.data = playdate.date
+         form.time.data = playdate.time
+         
+    return render_template('create_playdate.html', title='Update playdate', form=form,legend='Update playdate') 
+
+@main.route("/playdate/<int:playdate_id>/delete",methods=['POST'])
+def delete_playdate(playdate_id):
+    playdate=Playdate.query.get_or_404(playdate_id)
+    if playdate.author != current_user:
+        abort(403)
+    db.session.delete(playdate)
+    db.session.commit()
+    flash('Your playdate has been deleted!','success')
+    return redirect(url_for('main.home'))
+
+@main.route("/user/<string:username>")
+def user_playdates(username):
+    page_number = request.args.get('page', 1, type=int)  #default to 1 if no page query parameter, page num restrictd to int, values other than int throw value error
+    user = User.query.filter_by(username=username).first_or_404()
+    playdates = Playdate.query.filter_by(author=user)\
+        .order_by(Playdate.date_posted.desc())\
+        .paginate(page=page_number, per_page=5)
+    return render_template('user_playdates.html',playdatesinfo = playdates,user=user)

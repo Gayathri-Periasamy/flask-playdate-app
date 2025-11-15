@@ -34,12 +34,16 @@ class Child(db.Model, UserMixin):
 class Playdate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
     city = db.Column(db.String(100), nullable=False)
-    latitude = db.Column(db.Float, nullable=False)
-    longitude = db.Column(db.Float, nullable=False)
-    date_time = db.Column(db.DateTime, nullable=False)
+    latitude= db.Column(db.Float, nullable=False)
+    longitude= db.Column(db.Float, nullable=False)
+    playdate_date_time = db.Column(db.DateTime, nullable=False)
     date_posted = db.Column(db.DateTime, nullable=False,default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)   
 
     def __repr__(self):
-        return f"Playdate('{self.title}',{self.city}'{self.date_time}')"
+        return f"Playdate('{self.title}',{self.city}'{self.playdate_date_time}')"
+    
+
+
