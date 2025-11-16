@@ -13,11 +13,10 @@ from datetime import datetime
 main = Blueprint('main', __name__)
 
 @main.route('/', endpoint='home')
-#@main.route('/home')
 def home():
     page_number = request.args.get('page', 1, type=int)  #default to 1 if no page query parameter, page num restrictd to int, values other than int throw value error
     playdates = Playdate.query.order_by(Playdate.date_posted.desc()).paginate(page=page_number, per_page=5)
-    return render_template('home.html',playdatesinfo=playdates)
+    return render_template('home.html',playdatesinfo=playdates,searchtext="")
 
 @main.route('/about', endpoint='about')
 def about():
@@ -201,3 +200,11 @@ def user_playdates(username):
         .order_by(Playdate.date_posted.desc())\
         .paginate(page=page_number, per_page=5)
     return render_template('user_playdates.html',playdatesinfo = playdates,user=user)
+
+@main.route("/search",methods=['GET'])
+def search_playdates():
+     page_number = request.args.get('page', 1, type=int)  #default to 1 if no page query parameter, page num restrictd to int, values other than int throw value error
+     searchtext=request.args.get('search')
+     like=f"%{searchtext}%"
+     filtered_playdates=Playdate.query.filter(Playdate.city.ilike(like)).paginate(page=page_number, per_page=5)
+     return render_template('home.html',playdatesinfo = filtered_playdates, searchtext=searchtext)

@@ -11,7 +11,7 @@
       <button type="button" class="btn btn-danger btn-sm float-right" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button> 
       <a class="mr-2" href="{{ url_for('main.user_playdates',username=playdate.author.username) }}">{{ playdate.author.username }}</a>
       <small class="text-muted"
-        >{{ playdate.date_posted.strftime('%Y-%m-%d')}}</small
+        >{{ playdate.date_posted.strftime('%d-%m-%Y')}}</small
       >
     </div>
     <h2 class="article-title">{{ playdate.title }}</h2>
