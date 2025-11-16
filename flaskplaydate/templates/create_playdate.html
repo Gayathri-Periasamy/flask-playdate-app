@@ -53,7 +53,7 @@
                         {% if form.date.errors %}
                         {{ form.date (class = "form-control form-control-lg is-invalid") }}
                         <div class = "invalid-feedback">
-                            {% for error in form.date_time.errors %}
+                            {% for error in form.date.errors %}
                                 <span> {{ error }}</span>
                             {% endfor %}
 
@@ -68,7 +68,7 @@
                         {% if form.time.errors %}
                         {{ form.time (class = "form-control form-control-lg is-invalid") }}
                         <div class = "invalid-feedback">
-                            {% for error in form.date_time.errors %}
+                            {% for error in form.time.errors %}
                                 <span> {{ error }}</span>
                             {% endfor %}
 

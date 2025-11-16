@@ -158,22 +158,32 @@ def update_playdate(playdate_id):
         abort(403)
     form= PlaydateForm()
     if form.validate_on_submit():
-         playdate.title=form.title.data
-         playdate.description=form.description.data
-         db.session.commit()
-         flash('Your playdate has been updated!','success')
-         return redirect(url_for('main.playdate',playdate_id=playdate.id))
+         
+        playdate.title=form.title.data
+        playdate.description=form.description.data
+
+        if playdate.city != form.city.data :
+            lat,lon=validate_geocode_location(form.city.data)
+            playdate.latitude=lat
+            playdate.longitude=lon
+            playdate.city=form.city.data         
+        playdate.playdate_date_time=datetime.combine(form.date.data, form.time.data)
+        db.session.commit()
+        flash('Your playdate has been updated!','success')
+        return redirect(url_for('main.playdate',playdate_id=playdate.id))
     elif request.method == 'GET':
          
          form.title.data = playdate.title
          form.description.data = playdate.description
          form.city.data = playdate.city
-         form.date.data = playdate.date
-         form.time.data = playdate.time
+         temp_date= datetime.date(playdate.playdate_date_time)
+         temp_time = datetime.time(playdate.playdate_date_time)
+         form.date.data = temp_date
+         form.time.data = temp_time
          
     return render_template('create_playdate.html', title='Update playdate', form=form,legend='Update playdate') 
 
-@main.route("/playdate/<int:playdate_id>/delete",methods=['POST'])
+@main.route("/playdate/<int:playdate_id>/delete",methods=['GET','POST'])
 def delete_playdate(playdate_id):
     playdate=Playdate.query.get_or_404(playdate_id)
     if playdate.author != current_user:

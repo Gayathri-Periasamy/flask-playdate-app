@@ -4,6 +4,7 @@ from flask_login import current_user
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, DateField, TimeField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, Regexp
 from flaskplaydate.models import User
+from datetime import datetime,date,time
 
 
 class RegistrationForm(FlaskForm):
@@ -59,9 +60,7 @@ class UpdateAccountForm(FlaskForm):
         if user:
             raise ValidationError('Email already exists. Please choose a different one.')
     
-
-        
-
+       
 class PlaydateForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[DataRequired()])
@@ -71,3 +70,21 @@ class PlaydateForm(FlaskForm):
     date=DateField('Playdate Date', validators=[DataRequired()])
     time=TimeField('Playdate Time', validators=[DataRequired()])
     submit = SubmitField('Post Playdate')
+
+    def validate(self, extra_validators=None):
+        if not super().validate(extra_validators=extra_validators):
+            return False
+        
+        today= date.today()
+        if self.date.data < today:
+            self.date.errors.append("Date cannot be in the past")
+            return False
+    
+        event_dt = datetime.combine(self.date.data,self.time.data)
+        now=datetime.now()
+        if event_dt <= now:
+            self.time.errors.append("Time must be in the future")
+            return False
+        return True
+
+    
