@@ -8,6 +8,7 @@ from flaskplaydate import db, bcrypt
 from flaskplaydate.forms import RegistrationForm, LoginForm, UpdateAccountForm, PlaydateForm
 from flask_login import login_user,current_user, logout_user,login_required
 from datetime import datetime
+from geopy.distance import geodesic
 
 # Define a Blueprint instead of using app directly
 main = Blueprint('main', __name__)
@@ -106,11 +107,12 @@ def validate_geocode_location(location_string):
     #    raise ValueError('Location is too vague. Please enter a more specific city/area name.')
     
     address = result.raw['address']
-    '''
+    
     allowed_types=['city','town','village','suburb','neighbourhood','hamlet','house','residential']
     place_type = result.raw.get('type', '')
     if place_type not in allowed_types:
         raise ValueError(f'This does not look like a real place, ({place_type}) Try a city or neighborhood.')
+    '''
     return result.latitude, result.longitude
     
      
@@ -203,8 +205,32 @@ def user_playdates(username):
 
 @main.route("/search",methods=['GET'])
 def search_playdates():
-     page_number = request.args.get('page', 1, type=int)  #default to 1 if no page query parameter, page num restrictd to int, values other than int throw value error
-     searchtext=request.args.get('search')
-     like=f"%{searchtext}%"
-     filtered_playdates=Playdate.query.filter(Playdate.city.ilike(like)).paginate(page=page_number, per_page=5)
-     return render_template('home.html',playdatesinfo = filtered_playdates, searchtext=searchtext)
+    page_number = request.args.get('page', 1, type=int)  #default to 1 if no page query parameter, page num restrictd to int, values other than int throw value error
+    searchtext=request.args.get('search')
+    like=f"%{searchtext}%"
+
+    search_lat,search_lon=validate_geocode_location(searchtext)
+    if search_lat:
+        lat1=search_lat
+    if search_lon:
+        lon1=search_lon
+    result_id=[]
+    all_playdates = Playdate.query.all()
+    for playdate in all_playdates:
+        lat2=playdate.latitude
+        lon2=playdate.longitude
+        distance = distance_calculator(lat1,lon1,lat2,lon2)
+        print (distance)
+        if distance < 3:
+            result_id.append(playdate.id)
+        print(len(result_id))
+    filtered_playdates=Playdate.query.filter(Playdate.id.in_(result_id)).paginate(page=page_number, per_page=5)
+    #filtered_playdates=Playdate.query.filter(Playdate.city.ilike(like)).paginate(page=page_number, per_page=5)
+    return render_template('home.html',playdatesinfo = filtered_playdates, searchtext=searchtext)
+
+
+def distance_calculator(lat1,lon1,lat2,lon2):
+    playdate_address=(lat1,lon1)
+    search_address=(lat2,lon2)
+    distance=geodesic(playdate_address,search_address).km
+    return distance
