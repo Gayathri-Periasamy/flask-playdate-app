@@ -1,5 +1,6 @@
 import os
 import secrets
+import operator
 from PIL import Image
 from geopy.geocoders import Nominatim
 from flask import Blueprint,current_app, render_template, url_for,flash,redirect,request,abort
@@ -99,7 +100,8 @@ geolocator = Nominatim(user_agent="flask-playdate-app")
 def validate_geocode_location(location_string):
     result = geolocator.geocode(location_string, country_codes='de', addressdetails=True)
     if result is None:
-        raise ValueError('Location not found. Please enter a more precise city/area name.')
+       # raise ValueError('Location not found. Please enter a more precise city/area name.')
+       return None
     '''if (result.latitude== 0 or result.longitude == 0):
         raise ValueError('Invalid location coordinates. Please refine your input.')
     #importance = result.raw.get('importance', 0)
@@ -206,7 +208,8 @@ def user_playdates(username):
 @main.route("/search",methods=['GET'])
 def search_playdates():
     page_number = request.args.get('page', 1, type=int)  #default to 1 if no page query parameter, page num restrictd to int, values other than int throw value error
-    searchtext=request.args.get('search')
+    searchtext =request.args.get('search')
+    radius=request.args.get('radius')
     like=f"%{searchtext}%"
 
     search_lat,search_lon=validate_geocode_location(searchtext)
@@ -214,23 +217,32 @@ def search_playdates():
         lat1=search_lat
     if search_lon:
         lon1=search_lon
-    result_id=[]
+    playdate_distance=dict()
     all_playdates = Playdate.query.all()
     for playdate in all_playdates:
         lat2=playdate.latitude
         lon2=playdate.longitude
         distance = distance_calculator(lat1,lon1,lat2,lon2)
         print (distance)
-        if distance < 3:
-            result_id.append(playdate.id)
-        print(len(result_id))
-    filtered_playdates=Playdate.query.filter(Playdate.id.in_(result_id)).paginate(page=page_number, per_page=5)
+        if not radius:
+            if distance < 3:
+                playdate_distance.setdefault(playdate.id,distance)
+            distance=0       
+        else:
+            if distance < int(radius):
+                playdate_distance.setdefault(playdate.id,distance)
+            distance=0
+                 
+    print(len(playdate_distance))
+    sorted_playdate_distance=dict(sorted(playdate_distance.items(),key=operator.itemgetter(1)))
+    print(sorted_playdate_distance)
+    filtered_playdates=Playdate.query.filter(Playdate.id.in_(sorted_playdate_distance)).paginate(page=page_number, per_page=5)
     #filtered_playdates=Playdate.query.filter(Playdate.city.ilike(like)).paginate(page=page_number, per_page=5)
-    return render_template('home.html',playdatesinfo = filtered_playdates, searchtext=searchtext)
+    return render_template('home.html',playdatesinfo = filtered_playdates, searchtext=searchtext,radius=radius,away=sorted_playdate_distance)
 
 
 def distance_calculator(lat1,lon1,lat2,lon2):
-    playdate_address=(lat1,lon1)
-    search_address=(lat2,lon2)
-    distance=geodesic(playdate_address,search_address).km
+    search_address=(lat1,lon1)
+    playdate_address=(lat2,lon2)
+    distance=geodesic(search_address,playdate_address).km
     return distance
