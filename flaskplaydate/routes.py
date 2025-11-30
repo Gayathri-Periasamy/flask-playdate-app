@@ -1,6 +1,7 @@
 import os
 import secrets
 import operator
+import math
 from PIL import Image
 from geopy.geocoders import Nominatim
 from flask import Blueprint,current_app, render_template, url_for,flash,redirect,request,abort
@@ -100,14 +101,13 @@ geolocator = Nominatim(user_agent="flask-playdate-app")
 def validate_geocode_location(location_string):
     result = geolocator.geocode(location_string, country_codes='de', addressdetails=True)
     if result is None:
-       # raise ValueError('Location not found. Please enter a more precise city/area name.')
-       return None
-    '''if (result.latitude== 0 or result.longitude == 0):
+       raise ValueError('Location not found. Please enter a more precise city/area name.')
+    if (result.latitude== 0 or result.longitude == 0):
         raise ValueError('Invalid location coordinates. Please refine your input.')
     #importance = result.raw.get('importance', 0)
     #if importance < 0.5:
     #    raise ValueError('Location is too vague. Please enter a more specific city/area name.')
-    
+    '''
     address = result.raw['address']
     
     allowed_types=['city','town','village','suburb','neighbourhood','hamlet','house','residential']
@@ -149,12 +149,14 @@ def create_playdate():
 
 
 @main.route("/playdate/<int:playdate_id>")
+@login_required
 def playdate(playdate_id):
      playdate=Playdate.query.get_or_404(playdate_id)
      return render_template('playdate.html', title='playdate.title',playdate=playdate) 
 
 
 @main.route("/playdate/<int:playdate_id>/update",methods=['GET','POST'])
+@login_required
 def update_playdate(playdate_id):
     playdate=Playdate.query.get_or_404(playdate_id)
     if playdate.author != current_user:
@@ -187,6 +189,7 @@ def update_playdate(playdate_id):
     return render_template('create_playdate.html', title='Update playdate', form=form,legend='Update playdate') 
 
 @main.route("/playdate/<int:playdate_id>/delete",methods=['GET','POST'])
+@login_required
 def delete_playdate(playdate_id):
     playdate=Playdate.query.get_or_404(playdate_id)
     if playdate.author != current_user:
@@ -197,6 +200,7 @@ def delete_playdate(playdate_id):
     return redirect(url_for('main.home'))
 
 @main.route("/user/<string:username>")
+@login_required
 def user_playdates(username):
     page_number = request.args.get('page', 1, type=int)  #default to 1 if no page query parameter, page num restrictd to int, values other than int throw value error
     user = User.query.filter_by(username=username).first_or_404()
@@ -222,21 +226,22 @@ def search_playdates():
     for playdate in all_playdates:
         lat2=playdate.latitude
         lon2=playdate.longitude
+        distance=0
         distance = distance_calculator(lat1,lon1,lat2,lon2)
         print (distance)
         if not radius:
             if distance < 3:
-                playdate_distance.setdefault(playdate.id,distance)
-            distance=0       
+                playdate_distance.setdefault(playdate.id,distance)       
         else:
             if distance < int(radius):
-                playdate_distance.setdefault(playdate.id,distance)
-            distance=0
+                playdate_distance.setdefault(playdate.id,round(distance,2))
                  
-    print(len(playdate_distance))
-    sorted_playdate_distance=dict(sorted(playdate_distance.items(),key=operator.itemgetter(1)))
-    print(sorted_playdate_distance)
-    filtered_playdates=Playdate.query.filter(Playdate.id.in_(sorted_playdate_distance)).paginate(page=page_number, per_page=5)
+    print("Playdate dictionary length:",len(playdate_distance))
+    sorted_playdate_distance=dict(sorted(playdate_distance.items(),key=lambda item:item[1],reverse=False))
+    print("Sorted Playdates:",sorted_playdate_distance)
+    
+    filtered_playdates=Playdate.query.filter(Playdate.id.in_(sorted_playdate_distance.keys())).paginate(page=page_number, per_page=5)
+    print("Final Playdates:",filtered_playdates)
     #filtered_playdates=Playdate.query.filter(Playdate.city.ilike(like)).paginate(page=page_number, per_page=5)
     return render_template('home.html',playdatesinfo = filtered_playdates, searchtext=searchtext,radius=radius,away=sorted_playdate_distance)
 
