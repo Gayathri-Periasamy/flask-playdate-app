@@ -34,12 +34,6 @@ def create_global_app():
   login_manager.login_view = 'main.login'
   login_manager.login_message_category = 'info'
 
-  '''
-  with app.app_context():
-    if not os.path.exists(db_path):
-      print(f"Creating database at {db_path}")
-      db.create_all()
-  '''
   # Import routes *after* app is ready
   from flaskplaydate import routes
   from flaskplaydate.routes import main

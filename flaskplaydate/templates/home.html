@@ -58,12 +58,14 @@
               <p class="article-content">{{ playdate.description }}</p>
               {% if current_user.is_authenticated %}
                 <p class="article-content">{{ playdate.city }}</p>
+                <p>{{ playdate.playdate_date_time}}</p>
                 <p class="article-content">{{ playdate.playdate_date_time.strftime('%a, %b %d-%Y, %H:%M')}}</p>
                 {% if playdate.author.id != current_user.id%}
                   <a href="{{ url_for('main.contact_author', user_id=playdate.author.id) }}" class="btn btn-sm btn-outline-primary mt-2">Contact Parent</a>
                 {% endif %}
               {% else %}
                 <p class="article-content blurred-content">{{ playdate.city }}</p>
+                <p>{{ playdate.playdate_date_time}}</p>
                 <p class="article-content blurred-content">{{ playdate.playdate_date_time.strftime('%a, %b %d-%Y, %H:%M')}}</p>
               {% endif %}
               {% if searchtext and playdatesinfo.items %}

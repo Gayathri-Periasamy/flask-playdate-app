@@ -1,7 +1,5 @@
 import os
 import secrets
-import operator
-import math
 from PIL import Image
 from geopy.geocoders import Nominatim
 from flask import Blueprint,current_app, render_template, url_for,flash,redirect,request,abort
@@ -18,7 +16,9 @@ main = Blueprint('main', __name__)
 @main.route('/', endpoint='home')
 def home():
     page_number = request.args.get('page', 1, type=int)  #default to 1 if no page query parameter, page num restrictd to int, values other than int throw value error
-    playdates = Playdate.query.order_by(Playdate.date_posted.desc()).paginate(page=page_number, per_page=5)
+    now=datetime.now()
+    print("Time now:",now)
+    playdates = Playdate.query.filter(Playdate.playdate_date_time >= now).order_by(Playdate.date_posted.desc()).paginate(page=page_number, per_page=5)
     return render_template('home.html',playdatesinfo=playdates,searchtext="")
 
 @main.route('/about', endpoint='about')
@@ -108,17 +108,6 @@ def validate_geocode_location(location_string):
        raise ValueError('Location not found. Please enter a more precise city/area name.')
     if (result.latitude== 0 or result.longitude == 0):
         raise ValueError('Invalid location coordinates. Please refine your input.')
-    #importance = result.raw.get('importance', 0)
-    #if importance < 0.5:
-    #    raise ValueError('Location is too vague. Please enter a more specific city/area name.')
-    '''
-    address = result.raw['address']
-    
-    allowed_types=['city','town','village','suburb','neighbourhood','hamlet','house','residential']
-    place_type = result.raw.get('type', '')
-    if place_type not in allowed_types:
-        raise ValueError(f'This does not look like a real place, ({place_type}) Try a city or neighborhood.')
-    '''
     return result.latitude, result.longitude
     
      
@@ -226,30 +215,25 @@ def search_playdates():
     if search_lon:
         lon1=search_lon
     playdate_distance=dict()
-    all_playdates = Playdate.query.all()
-    # organize above query better/future playdates/near future weeks(2/3)
+    now=datetime.now()
+
+    all_playdates = Playdate.query.filter(Playdate.playdate_date_time >= now).order_by(Playdate.playdate_date_time.asc()).all()
 
     for playdate in all_playdates:
         lat2=playdate.latitude
         lon2=playdate.longitude
         distance=0
         distance = distance_calculator(lat1,lon1,lat2,lon2)
-        print (distance)
         if not radius:
             if distance < 3:
                 playdate_distance.setdefault(playdate.id,distance)       
         else:
             if distance < int(radius):
                 playdate_distance.setdefault(playdate.id,round(distance,2))
-                 
-    print("Playdate dictionary length:",len(playdate_distance))
+        
     sorted_playdate_distance=dict(sorted(playdate_distance.items(),key=lambda item:item[1],reverse=False))
-    print("Sorted Playdates:",sorted_playdate_distance)
     
     filtered_playdates=Playdate.query.filter(Playdate.id.in_(sorted_playdate_distance.keys())).paginate(page=page_number, per_page=5)
-    print("Final Playdates:",filtered_playdates)
-    #filtered_playdates=Playdate.query.filter(Playdate.city.ilike(like)).paginate(page=page_number, per_page=5)
-    # get items--> create temporary column--> pandas
     return render_template('home.html',playdatesinfo = filtered_playdates, searchtext=searchtext,radius=radius,away=sorted_playdate_distance)
 
 
@@ -270,11 +254,6 @@ def contact_author(user_id):
             flash("Message cannot be empty.", "danger")
             return redirect(request.url)
 
-        # SIMPLE MVP: Use email or just print/store
-        # If email is set up:
-        # send_email(user.email, "Message from Playdate", msg)
-
-        print(f"Message to {user.email} from {current_user.email}: {msg}")
         flash("Your message has been sent!", "success")
         return redirect(url_for('main.home'))
 

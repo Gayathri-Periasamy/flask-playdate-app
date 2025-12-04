@@ -20,17 +20,6 @@ class User(db.Model, UserMixin):
         return f"User('{self.username}','{self.email}','{self.image_file}')"
 
 
-class Child(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    name = db.Column(db.String(20), nullable=False,default='Anonymous')
-    age = db.Column(db.Integer,nullable=False)
-    interests = db.Column(db.String(200), nullable=False,default='Not Mentioned')
-
-    def __repr__(self):
-        return f"Child('{self.name}','{self.age}','{self.interests}')"
-
-
 class Playdate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)

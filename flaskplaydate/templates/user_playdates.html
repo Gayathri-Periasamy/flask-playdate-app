@@ -1,12 +1,6 @@
 {% extends 'layout.html' %}
     {% block content%}    
         <h1 class="mb-3">Playdates by {{ user.username }} ({{ playdatesinfo.total }})</h1>
-        <!--
-        <form method="get" action="{{ url_for('main.search_playdates') }}">
-          <input type="search" placeholder="City/Area" name="search" minlength="2" maxlength="100" value="{{ searchtext }}" required>
-          <button type="submit" class="btn btn-secondary" mb-3 mt-3 pt-4 pb-4>Search Location</button>
-        </form>
-        -->
         
         {% for playdate in playdatesinfo.items %}
           <article class="media content-section">
@@ -19,7 +13,7 @@
               <h2><a class="article-title" href="{{url_for('main.playdate',playdate_id=playdate.id  ) }}">{{ playdate.title }}</a></h2>
               <p class="article-content">{{ playdate.description }}</p>
               <p class="article-content">{{ playdate.city }}</p>
-              <p class="article-content">{{ playdate.playdate_date_time }}</p>
+              <p class="article-content">{{ playdate.playdate_date_time.strftime('%a, %b %d-%Y, %H:%M') }}</p>
             </div>
           </article>
 
