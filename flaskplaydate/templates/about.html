@@ -1,4 +1,89 @@
 {% extends 'layout.html' %}
     {% block content%}
-            <h1>About Page!</h1>
+
+<!-- ABOUT PAGE -->
+
+<div class="container py-5">
+
+    <!-- Header Section -->
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">About Playdates</h1>
+        <p class="text-muted fs-5">
+            Helping parents connect, socialize, and create memorable play experiences.
+        </p>
+    </div>
+
+    <!-- Mission Card -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <h3 class="card-title">Our Mission</h3>
+            <p class="card-text mt-3">
+                Playdates is designed to make it easy for parents to discover nearby play opportunities,
+                connect with other families, and build meaningful social bonds for their children.
+            </p>
+        </div>
+    </div>
+
+    <!-- Feature Grid -->
+    <div class="row g-4 mb-5">
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="display-6 mb-3">📍</div>
+                    <h5 class="card-title">Location-Based Search</h5>
+                    <p class="card-text">
+                        Quickly find playdates happening near you using simple search filters.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="display-6 mb-3">👨‍👩‍👧</div>
+                    <h5 class="card-title">Connect with Parents</h5>
+                    <p class="card-text">
+                        Meet other families in your neighborhood and grow your community.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="display-6 mb-3">🎉</div>
+                    <h5 class="card-title">Create & Join Playdates</h5>
+                    <p class="card-text">
+                        Host your own playdate or join one — easily and securely.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- How It Works -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h3>How It Works</h3>
+            <ol class="mt-3">
+                <li>Search for playdates near your preferred location.</li>
+                <li>Apply filters and search for a playdate in preferred area.</li>
+                <li>Join a playdate — or create one of your own!</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="text-center mt-5">
+        <h5>Questions or feedback?</h5>
+        <p class="text-muted">We’d love to hear from you!</p>
+        <a href="{{ url_for('main.contact') }}" class="btn btn-primary">Contact Us</a>
+    </div>
+
+</div>
+
     {% endblock%}

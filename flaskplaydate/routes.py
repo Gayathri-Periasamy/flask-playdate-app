@@ -25,6 +25,10 @@ def home():
 def about():
     return render_template('about.html',title="About")
 
+@main.route('/contact', endpoint='contact')
+def contact():
+    return render_template('contact.html',title="Contact")
+
 
 @main.route('/register',endpoint = 'register', methods=['GET','POST'])
 def register():
@@ -223,6 +227,8 @@ def search_playdates():
         lon1=search_lon
     playdate_distance=dict()
     all_playdates = Playdate.query.all()
+    # organize above query better/future playdates/near future weeks(2/3)
+
     for playdate in all_playdates:
         lat2=playdate.latitude
         lon2=playdate.longitude
@@ -243,6 +249,7 @@ def search_playdates():
     filtered_playdates=Playdate.query.filter(Playdate.id.in_(sorted_playdate_distance.keys())).paginate(page=page_number, per_page=5)
     print("Final Playdates:",filtered_playdates)
     #filtered_playdates=Playdate.query.filter(Playdate.city.ilike(like)).paginate(page=page_number, per_page=5)
+    # get items--> create temporary column--> pandas
     return render_template('home.html',playdatesinfo = filtered_playdates, searchtext=searchtext,radius=radius,away=sorted_playdate_distance)
 
 
@@ -251,3 +258,24 @@ def distance_calculator(lat1,lon1,lat2,lon2):
     playdate_address=(lat2,lon2)
     distance=geodesic(search_address,playdate_address).km
     return distance
+
+@main.route('/contact/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def contact_author(user_id):
+    user = User.query.get_or_404(user_id)
+
+    if request.method == 'POST':
+        msg = request.form.get('message')
+        if not msg.strip():
+            flash("Message cannot be empty.", "danger")
+            return redirect(request.url)
+
+        # SIMPLE MVP: Use email or just print/store
+        # If email is set up:
+        # send_email(user.email, "Message from Playdate", msg)
+
+        print(f"Message to {user.email} from {current_user.email}: {msg}")
+        flash("Your message has been sent!", "success")
+        return redirect(url_for('main.home'))
+
+    return render_template('contact_form.html', recipient=user)

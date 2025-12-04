@@ -1,18 +1,20 @@
 {% extends 'layout.html' %}
     {% block content%} 
-       <h1 class="my-4">Your PlayDate!</h1>
-       <div class="container my-4">
-          <div class="card shadow-sm p-4 mb-4">
-            <h3 class="card-title mb-3">Find Local Playdates Near You</h5>
-            <h5 class="mb-4">Browse your cities upcoming playdates in seconds!</h5>
-            <form method="get" action="{{ url_for('main.search_playdates') }}">
+       
+       <div class="bg-light py-5 mb-4 border-bottom">
+          <div class="container text-center">
+            <h1 class="fw-bold">Find Playdates Near You</h5>
+            <p class="text-muted fs-5">Discover families, connect, and create fun experiences for your kids.</p>
 
-              <div class="row g-2 align-items-end">
-                <div class="col-md-5">
+            <!-- Search Bar -->
+            <form method="get" action="{{ url_for('main.search_playdates') }}" class="row g-2 justify-content-center mt-4">
+
+              <div class="row g-2 align-items-end pb-4">
+                <div class="col-md-4">
                   <label for="radius-select" class="form-label mb-2">Location</label><br>
                   <input type="search" class="p-1" placeholder="Search Location (City/Area)" name="search" minlength="2" maxlength="100" value="{{ searchtext }}" required><br>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <label for="radius" class="form-label mb-2">Radius</label><br>
                   <select class="form-select" name="radius" id="radius-playdates">
                     <option value="1">1 km (Walking Distance)</option>
@@ -23,13 +25,13 @@
                   </select>
                 </div>
                 <div class="col-md-2 d-grid">
-                  <button type="submit" class="btn btn-secondary">Search</button>
+                  <button type="submit" class="btn btn-primary w-100">Search</button>
                 </div>
                 
           </div>
-         
+         </div>
         </form>
-      </div>
+      
 
         {% if searchtext and playdatesinfo.items %}
         
@@ -37,7 +39,13 @@
         
         {% endif %}
 
-       
+        {% if not current_user.is_authenticated %}
+          <div class="alert alert-info text-center">
+              Please <a href="{{ url_for('main.login') }}">Log in</a> or 
+              <a href="{{ url_for('main.register') }}">Create an account</a> to view full playdate details.
+          </div>
+        {% endif %}
+
           {% for playdate in playdatesinfo.items %}
           <article class="media content-section">
             <img class="rounded-circle article-img" src="{{ url_for('static',filename='pictures/' +playdate.author.image_file) }}">
@@ -48,10 +56,12 @@
               </div>
               <h2><a class="article-title" href="{{url_for('main.playdate',playdate_id=playdate.id ) }}">{{ playdate.title }}</a></h2>
               <p class="article-content">{{ playdate.description }}</p>
-              <p>{{ playdate.id }}</p>
               {% if current_user.is_authenticated %}
                 <p class="article-content">{{ playdate.city }}</p>
                 <p class="article-content">{{ playdate.playdate_date_time.strftime('%a, %b %d-%Y, %H:%M')}}</p>
+                {% if playdate.author.id != current_user.id%}
+                  <a href="{{ url_for('main.contact_author', user_id=playdate.author.id) }}" class="btn btn-sm btn-outline-primary mt-2">Contact Parent</a>
+                {% endif %}
               {% else %}
                 <p class="article-content blurred-content">{{ playdate.city }}</p>
                 <p class="article-content blurred-content">{{ playdate.playdate_date_time.strftime('%a, %b %d-%Y, %H:%M')}}</p>
@@ -61,7 +71,6 @@
               {% endif %}
             </div>
           </article>
-
         {% endfor %}
 
         {% for page_num in playdatesinfo.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
