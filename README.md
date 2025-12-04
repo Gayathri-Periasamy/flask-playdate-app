@@ -4,6 +4,16 @@ A simple, intuitive web application that helps parents discover nearby playdates
 
 This is a 3-week MVP project, built to demonstrate full-stack development skills with Python/Flask, SQLAlchemy, Bootstrap, and location-based filtering. The application will be extended in future versions with new features and improved UX.
 
+📸 Screenshots
+    Home Page
+    Playdate Create Form
+    User Account Page
+    About Page
+    Contact Page
+    Search Playdates
+
+
+
 ⭐ Features (MVP)
 👤 User Authentication
 
