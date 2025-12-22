@@ -14,7 +14,7 @@ def create_global_app():
   app = Flask(__name__,instance_relative_config=True)
 
   # Configure 
-  app.config['SECRET_KEY'] = 'e1cbe4a994994f32058779e8da78c810' # used for session signing and CSRF protection
+  app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY','dev-only-fallback')
   db_path=os.path.join(app.instance_path, 'playdate.db')
   app.config["SQLALCHEMY_DATABASE_URI"]= f"sqlite:///{db_path}"
   app.config["SQLALCHEMY_TRACK_MODIFICATIONS"]=False #to enable or disable tracking modifications of objects. 
