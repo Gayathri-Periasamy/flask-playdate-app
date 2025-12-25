@@ -9,6 +9,7 @@ from flaskplaydate.forms import RegistrationForm, LoginForm, UpdateAccountForm, 
 from flask_login import login_user,current_user, logout_user,login_required
 from datetime import datetime
 from geopy.distance import geodesic
+from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 
 # Define a Blueprint instead of using app directly
 main = Blueprint('main', __name__)
@@ -103,11 +104,14 @@ def account():
 
 geolocator = Nominatim(user_agent="flask-playdate-app")
 def validate_geocode_location(location_string):
-    result = geolocator.geocode(location_string, country_codes='de', addressdetails=True)
-    if result is None:
-       raise ValueError('Location not found. Please enter a more precise city/area name.')
-    if (result.latitude== 0 or result.longitude == 0):
-        raise ValueError('Invalid location coordinates. Please refine your input.')
+    try:
+        result = geolocator.geocode(location_string, country_codes='de', addressdetails=True,timeout=10)
+    except(GeocoderUnavailable, GeocoderTimedOut, OSError) as e:
+        current_app.logger.error(f"Geocoding failed: {e}")
+        return None, None
+    
+    if not result :
+           return None, None
     return result.latitude, result.longitude
     
      
@@ -119,6 +123,9 @@ def create_playdate():
         try:
         
             lat,lon=validate_geocode_location(form.city.data)
+            if(lat is None or lon is None):
+                flash('Location lookup failed. Please enter a more specific city/area name or try again later.', 'warning')
+                return redirect(url_for('main.create_playdate'))
 
             playdate=Playdate(
                 title = form.title.data,
