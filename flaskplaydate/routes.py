@@ -10,6 +10,7 @@ from flask_login import login_user,current_user, logout_user,login_required
 from datetime import datetime
 from geopy.distance import geodesic
 from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
+from flask import current_app
 
 # Define a Blueprint instead of using app directly
 main = Blueprint('main', __name__)
@@ -105,13 +106,19 @@ def account():
 geolocator = Nominatim(user_agent="flask-playdate-app")
 def validate_geocode_location(location_string):
     try:
-        result = geolocator.geocode(location_string, country_codes='de', addressdetails=True,timeout=10)
+        result = geolocator.geocode(
+            location_string,
+            country_codes='de',
+            addressdetails=True,
+            timeout=10
+        )
     except(GeocoderUnavailable, GeocoderTimedOut, OSError) as e:
         current_app.logger.error(f"Geocoding failed: {e}")
         return None, None
     
     if not result :
-           return None, None
+        return None, None
+
     return result.latitude, result.longitude
     
      
@@ -121,10 +128,10 @@ def create_playdate():
     form= PlaydateForm()
     if form.validate_on_submit():
         try:
-        
-            lat,lon=validate_geocode_location(form.city.data)
-            if(lat is None or lon is None):
-                flash('Location lookup failed. Please enter a more specific city/area name or try again later.', 'warning')
+
+            lat, lon = validate_geocode_location(form.city.data)
+            if lat is None or lon is None:
+                flash('We could not find this location. Please enter a real city or area name (Eg. Berlin, Mitte).', 'warning')
                 return redirect(url_for('main.create_playdate'))
 
             playdate=Playdate(
@@ -169,6 +176,10 @@ def update_playdate(playdate_id):
 
         if playdate.city != form.city.data :
             lat,lon=validate_geocode_location(form.city.data)
+            if lat is None or lon is None:
+                flash('Location could not be verified. Please enter a real city or area name', 'warning')
+                return redirect(url_for('main.update_playdate',playdate_id=playdate.id))
+            
             playdate.latitude=lat
             playdate.longitude=lon
             playdate.city=form.city.data         
@@ -194,10 +205,48 @@ def delete_playdate(playdate_id):
     playdate=Playdate.query.get_or_404(playdate_id)
     if playdate.author != current_user:
         abort(403)
-    db.session.delete(playdate)
-    db.session.commit()
-    flash('Your playdate has been deleted!','success')
-    return redirect(url_for('main.home'))
+    
+    form= PlaydateForm()
+    if form.validate_on_submit():
+        playdate.title = form.title.data
+        playdate.description = form.description.data
+        playdate.playdate_date_time = datetime.combine(
+            form.date.data,
+            form.time.data
+        )
+
+        # Only re-geocode if city changed
+        if playdate.city != form.city.data:
+
+            status, data = validate_geocode_location(form.city.data)
+
+            if status == "SERVICE_UNAVAILABLE":
+                flash(
+                    "Location service is temporarily unavailable. "
+                    "Please try again later.",
+                    "warning"
+                )
+                return redirect(url_for('main.create_playdate'))
+
+            if status == "NOT_FOUND":
+                flash(
+                    "We couldn’t find this location. "
+                    "Please enter a real city or area name.",
+                    "danger"
+                )
+                return redirect(url_for('main.create_playdate'))
+
+            # status == "OK"
+            lat, lon = data
+            playdate.city = form.city.data
+            playdate.latitude = lat
+            playdate.longitude = lon
+
+        db.session.commit()
+        flash("Your playdate has been updated!", "success")
+        return redirect(
+            url_for("main.playdate", playdate_id=playdate.id)
+        )
 
 @main.route("/user/<string:username>")
 @login_required
