@@ -131,7 +131,7 @@ def create_playdate():
 
             lat, lon = validate_geocode_location(form.city.data)
             if lat is None or lon is None:
-                flash('We could not find this location. Please enter a real city or area name (Eg. Berlin, Mitte).', 'warning')
+                flash('We could not find this location. Please enter a real city/area name or try after sometime.', 'warning')
                 return redirect(url_for('main.create_playdate'))
 
             playdate=Playdate(

@@ -2,7 +2,7 @@
 
 Playdate Finder is a full-stack Flask web application that helps parents discover nearby playdates and connect with other families in their area.
 
-This project was developed as a 6-week MVP to demonstrate practical backend and frontend engineering skills, including authentication, database modeling, form validation, and location-aware features. The application is production-deployed and designed to evolve beyond the MVP stage.
+This project was developed as a 6-week MVP to demonstrate practical backend and frontend engineering skills, including authentication, database modeling, form validation, and location-aware features. 
 
 🌐 Live Demo
 https://flask-playdate-app.onrender.com
@@ -145,6 +145,16 @@ FLASK_PLAYDATE_APP/
 ├── README.md
 ├── Procfile
 └── run.py
+
+⚠️ Known Limitations (MVP)
+
+Geocoding Availability
+This application uses free OpenStreetMap (Nominatim) geocoding via Geopy.
+
+In cloud hosting environments, free geocoding services may be rate-limited or temporarily unavailable. To ensure application stability, playdates can still be created when geocoding fails, and distance-based filtering degrades gracefully.
+
+Future versions will integrate a production-grade geocoding API with caching and improved reliability.
+
 
 🔧 Local Installation & Setup
 1️⃣ Clone the repository
