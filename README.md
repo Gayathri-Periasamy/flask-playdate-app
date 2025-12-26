@@ -1,100 +1,131 @@
 🚀 Playdate Finder – Flask Web App (MVP)
 
-A simple, intuitive web application that helps parents discover nearby playdates and connect with other families in their area.
+Playdate Finder is a full-stack Flask web application that helps parents discover nearby playdates and connect with other families in their area.
 
-This is a 3-week MVP project, built to demonstrate full-stack development skills with Python/Flask, SQLAlchemy, Bootstrap, and location-based filtering. The application will be extended in future versions with new features and improved UX.
+This project was developed as a 6-week MVP to demonstrate practical backend and frontend engineering skills, including authentication, database modeling, form validation, and location-aware features. The application is production-deployed and designed to evolve beyond the MVP stage.
+
+🌐 Live Demo
+https://flask-playdate-app.onrender.com
+
+👉 Deployed on Render
+(Free-tier deployment; geocoding gracefully degrades when external services are unavailable)
 
 📸 Screenshots
-    Home Page
-    Playdate Create Form
-    User Account Page
-    About Page
-    Contact Page
-    Search Playdates
 
+Screenshots showcasing key user flows:
 
+Public Home Page
 
-⭐ Features (MVP)
+Home Page (Authenticated User)
+
+Playdate Creation Form
+
+Update / Delete Playdates
+
+Playdates Grouped by Author
+
+User Account Page
+
+Search & Browse Playdates
+
+Static Pages (About, Contact)
+
+(Screenshots stored in /docs/screenshots)
+
+⭐ Key Features (MVP)
 👤 User Authentication
 
-    User registration and login
+User registration & login
 
-    Secure password hashing
+Secure password hashing
 
-    Personalized account management
+Session management with Flask-Login
+
+Personalized user accounts
 
 📅 Playdate Management
 
-1. Create playdates with:
+Create playdates with:
 
-    Title
+Title
 
-    Description
+Description
 
-    City/Location
+City / Location
 
-    Date & Time
+Date & Time
 
-2. Edit or delete own playdates
+Edit and delete own playdates
 
-3. View playdates created by any user
+Browse playdates created by other users
 
-📍 Location-Based Browsing
+📍 Location-Aware Browsing
 
-    Search playdates by city/area
+Search playdates by city or area
 
-    Optional radius-based filtering
+Distance calculation using Geopy
 
-    Distance calculation using Geopy (MVP simplified: minimal matching)
+Graceful fallback when geocoding services are unavailable (important for production reliability)
+
+Design note:
+Location lookup failures never crash the app. Users receive clear feedback and can retry with a more specific location.
 
 🖥️ Responsive UI
 
-    Clean, mobile-friendly interface
+Mobile-friendly layout using Bootstrap 5
 
-    Bootstrap components
+Conditional rendering:
 
-    Conditional UI (blurred info for guests, full details for logged-in users)
+Guests see limited information
 
-🛡️ Form Security
+Authenticated users see full details
 
-    Flask-WTF CSRF protection
+🛡️ Form Security & Validation
 
-    Server-side validation (including date/time validation)
+Flask-WTF CSRF protection
+
+Server-side validation for:
+
+Dates and times
+
+Required fields
+
+Ownership checks for updates/deletes
 
 🧱 Tech Stack
 Backend
 
-    Python 3
+Python 3
 
-    Flask (app factory pattern)
+Flask (application factory pattern)
 
-    SQLAlchemy ORM
+SQLAlchemy ORM
 
-    Flask-Login
+Flask-Login
 
-    Flask-WTF / WTForms
+Flask-WTF / WTForms
 
 Frontend
 
-    Jinja2 templating
+Jinja2 templates
 
-    Bootstrap 5
+Bootstrap 5
 
-    Optional vanilla JavaScript
+Minimal vanilla JavaScript
 
 Database
 
-    SQLite (dev)
+SQLite (local development)
 
-    PostgreSQL (planned for deployment)
+PostgreSQL (planned for production scaling)
 
-Utilities
+Utilities & Tooling
 
-    Geopy – optional geocoding & distance calculation
+Geopy (geocoding & distance calculation)
 
-    python-dotenv
+python-dotenv
 
-Draw.io – architecture diagram
+Draw.io (architecture diagram)
 
 📁 Project Structure
 FLASK_PLAYDATE_APP/
@@ -112,18 +143,18 @@ FLASK_PLAYDATE_APP/
 ├── .env.example
 ├── .gitignore
 ├── README.md
-|---Procfile
+├── Procfile
 └── run.py
 
-🔧 Installation & Setup
+🔧 Local Installation & Setup
 1️⃣ Clone the repository
 git clone <your-repository-url>
 cd flask-playdate-app
 
-2️⃣ Create a virtual environment
+2️⃣ Create & activate virtual environment
 python3 -m venv venv
-source venv/bin/activate       # macOS/Linux
-venv\Scripts\activate          # Windows
+source venv/bin/activate   # macOS/Linux
+venv\Scripts\activate      # Windows
 
 3️⃣ Install dependencies
 pip install -r requirements.txt
@@ -135,46 +166,44 @@ Create a .env file:
 SECRET_KEY=your_secret_key_here
 DATABASE_URL=sqlite:///site.db
 
-5️⃣ Run the application
+5️⃣ Run the app
 flask run
 
 🏗️ Architecture Diagram
 
-Located in:
+Located at:
 
 docs/Flask_Playdate_TechArch_V1.drawio.png
 
 🚀 Future Enhancements (Post-MVP)
-🔹 Location & UI Improvements
+Architecture & Scalability
 
-    Browser geolocation integration
+PostgreSQL migration for production
 
-    Full distance-based sorting (SQL & in-memory hybrid)
+Blueprint-based modularization
 
-    Google Maps embed for playdate locations
+REST API (v1)
 
-🔹 Communication
+Location & UX Improvements
 
-    Email notifications using Flask-Mail
+Browser-based geolocation
 
-    Messaging system between parents
+Full distance-based sorting (SQL + in-memory)
 
-🔹 Scalability & Deployment
+Map-based playdate visualization
 
-    Deployment to Render / Railway
+Communication Features
 
-    Swap to PostgreSQL in production
+Email notifications
 
-🔹 Codebase Improvements
+Messaging between parents
 
-    Add Flask Blueprint modularization
+Quality & DevOps
 
-    Add automated tests (pytest)
+Automated tests (pytest)
 
-    GitHub Actions CI
-
-    API endpoints (REST v1)
+CI with GitHub Actions
 
 📄 License
 
-This project is licensed under the MIT License.
+MIT License
